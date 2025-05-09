@@ -11,6 +11,8 @@ STATE_FILE = Path("conversation.json")
 
 class ConversationManager:
     def save(self, messages: List[BaseMessage]) -> None:
+        print(messages)
+        print(type(messages[0]))
         with STATE_FILE.open("w") as f:
             json.dump([message_to_dict(m) for m in messages], f)
 

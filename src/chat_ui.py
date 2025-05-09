@@ -1,5 +1,5 @@
 import streamlit as st
-from langchain.schema import HumanMessage, AIMessage
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from llm_rag import LLMRAGHandler
 from conversation import ConversationManager
 from langchain_community.vectorstores import FAISS
@@ -30,7 +30,7 @@ def process_new_pdfs(uploaded_files):
 
 conversation_manager = ConversationManager()
 st.set_page_config(page_title="Ollama Chatbot")
-st.title("🤖 Local Chatbot with Ollama")
+st.title("🤖 Local RAG Chatbot - Chat with your PDFs 📄")
 
 # Verzeichnis zum Speichern der hochgeladenen Dateien
 UPLOAD_DIR = Path("uploaded_pdfs")
@@ -91,6 +91,10 @@ if user_input:
 
 # Display chat messages
 for msg in st.session_state.llm.get_history():
+    if isinstance(msg, SystemMessage):
+        # do not display instructions for the chatbot
+        continue
+    
     role = "user" if isinstance(msg, HumanMessage) else "assistant"
     with st.chat_message(role):
         st.markdown(msg.content)

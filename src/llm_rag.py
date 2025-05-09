@@ -35,9 +35,11 @@ class LLMRAGHandler:
         # TODO: Ggfs. retrieval chain verwenden?
         context_docs = self.retrieve(human_message)
         response = self.generate(question=human_message, context=context_docs)
+        if isinstance(human_message, str):
+            human_message = HumanMessage(content=human_message)
         self.history.append(human_message)                
         self.history.append(response)
-        return response.content
+        return response
 
     def reset(self) -> None:
         self.history = []
@@ -53,6 +55,7 @@ class LLMRAGHandler:
         docs_content = "\n\n".join(doc.page_content for doc in context)
         messages = self.rag_prompt.invoke({"question": question, "context": docs_content, "chat_history": self.history}).to_messages()
         response = self.llm.invoke(messages)
+        print(f"Type of response: {type(response)}")
         print(f"Response: {response}")
         print(f"Content of Response: {response.content}")
         return response
