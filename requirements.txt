@@ -1,0 +1,7 @@
+langchain==0.3.24
+langchain-community==0.3.23
+langchain-core==0.3.56
+langchain-ollama==0.3.2
+ollama==0.4.8
+pypdf==5.4.0
+streamlit==1.44.1
