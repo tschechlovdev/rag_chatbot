@@ -9,17 +9,22 @@ from langchain import hub
 from langchain.schema import Document
 from vector_store import VectorStore
 
-
-# prompt template for q&a with rag
-
-
 class LLMRAGHandler:
     def __init__(self, model="granite3.3"):
         self.llm = ChatOllama(model=model)
         self.vector_store = VectorStore(llm_model=model)
-        self.system_prompt = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, try to answer the question without context but mention that the context does not provide enough information." \
+        
+        # System prompt - These are the instructions for the model
+        self.system_prompt = "You are an assistant for question-answering tasks." \
+        " Use the following pieces of retrieved context to answer the question. " \
+        "If you don't know the answer, try to answer the question without context but mention that " \
+        "the context does not provide enough information." \
         " Use three sentences maximum and keep the answer concise."
+        
+        # keep track of the conversation history
         self.history = [SystemMessage(content=self.system_prompt)]
+
+        # prompt template for q&a with rag
         self.rag_prompt = PromptTemplate.from_template(
         "Previous conversation: {chat_history}"
         " Question: {question}" \
@@ -32,7 +37,6 @@ class LLMRAGHandler:
         print(f"{human_message}")
 
         print("Generating response from LLM...")
-        # TODO: Ggfs. retrieval chain verwenden?
         context_docs = self.retrieve(human_message)
         response = self.generate(question=human_message, context=context_docs)
         if isinstance(human_message, str):

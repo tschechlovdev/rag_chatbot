@@ -29,10 +29,10 @@ def process_new_pdfs(uploaded_files):
         st.rerun()
 
 conversation_manager = ConversationManager()
-st.set_page_config(page_title="Ollama Chatbot")
-st.title("🤖 Local RAG Chatbot - Chat with your PDFs 📄")
+st.set_page_config(page_title="RAG Chatbot")
+st.title("🤖 Chat with your PDFs 📄")
 
-# Verzeichnis zum Speichern der hochgeladenen Dateien
+# Folder for saving uploaded PDFs
 UPLOAD_DIR = Path("uploaded_pdfs")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -75,6 +75,13 @@ uploaded_files = st.sidebar.file_uploader(
 if uploaded_files:
     process_new_pdfs(uploaded_files)
 
+st.sidebar.header("🌐 Add Website URLs")
+urls = st.sidebar.text_area("Enter website URLs (one per line)").splitlines()
+if st.sidebar.button("📥 Add websites"):
+    with st.spinner("Processing websites..."):
+        print(urls)
+        st.session_state.llm.vector_store.index_websites(urls)
+    st.sidebar.success("Websites indexed successfully.")
 
 
 #####################

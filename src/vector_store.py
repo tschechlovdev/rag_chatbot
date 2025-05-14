@@ -9,9 +9,9 @@ from langchain_ollama import ChatOllama
 from langchain_ollama.embeddings import OllamaEmbeddings
 from langchain.schema import Document
 from langchain_community.docstore.in_memory import InMemoryDocstore
-
+from langchain_community.document_loaders import WebBaseLoader
 import faiss
-
+import bs4
 from langchain import hub
 
 def load_documents(data_path="data") -> List[Document]:
@@ -138,7 +138,7 @@ class VectorStore:
     
     def load_document(self, pdf_path: Path):
         loader = PyPDFLoader(str(pdf_path))
-        docs = loader.load()[0:2] # TODO: shortcut for time reasons
+        docs = loader.load() # TODO: shortcut for time reasons
         return docs if isinstance(docs, list) else [docs]
     
     def add_document(self, filePath: Path):
@@ -147,5 +147,25 @@ class VectorStore:
     
     def similarity_search(self, question: str):
         return self.vector_store.similarity_search(question)
-
     
+    def as_retriever(self):
+        return self.vector_store.as_retriever()
+
+    def index_websites(self, urls: list[str]):
+        docs = self.website_to_documents(urls)
+        return self.add_documents(docs)
+
+    def website_to_documents(self, urls: list[str]) -> list[Document]:
+        """Converts URLs to LangChain Document objects with metadata."""
+        loader = WebBaseLoader(
+            web_paths=urls,
+            bs_kwargs=dict(
+                parse_only=bs4.SoupStrainer(
+                    class_=("post-content", "post-title", "post-header")
+                )
+            ),
+        )
+        docs = loader.load()
+        
+        print(docs)
+        return docs
