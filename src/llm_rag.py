@@ -8,6 +8,9 @@ from typing import List
 from langchain import hub
 from langchain.schema import Document
 from vector_store import VectorStore
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import MessagesPlaceholder
+
 
 class LLMRAGHandler:
     def __init__(self, model="granite3.3"):
@@ -37,6 +40,7 @@ class LLMRAGHandler:
         print(f"{human_message}")
 
         print("Generating response from LLM...")
+
         context_docs = self.retrieve(human_message)
         response = self.generate(question=human_message, context=context_docs)
         if isinstance(human_message, str):
@@ -51,13 +55,15 @@ class LLMRAGHandler:
     def get_history(self) -> List[BaseMessage]:
         return self.history
     
-    def retrieve(self, question: str):
-        retrieved_docs = self.vector_store.similarity_search(question)
+    def retrieve(self, question: str, k:int = 4):
+        retrieved_docs = self.vector_store.similarity_search(question, k=k)
         return retrieved_docs
 
     def generate(self, question: str, context: List[Document]):
         docs_content = "\n\n".join(doc.page_content for doc in context)
-        messages = self.rag_prompt.invoke({"question": question, "context": docs_content, "chat_history": self.history}).to_messages()
+        messages = self.rag_prompt.invoke({"question": question, 
+                                           "context": docs_content, 
+                                           "chat_history": self.history}).to_messages()
         response = self.llm.invoke(messages)
         print(f"Type of response: {type(response)}")
         print(f"Response: {response}")

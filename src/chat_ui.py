@@ -94,7 +94,7 @@ if user_input:
         response = st.session_state.llm.generate_response(user_input)
         print(f"Response: {response}")
         print(type(response))
-    conversation_manager.save(st.session_state.llm.get_history())
+conversation_manager.save(st.session_state.llm.get_history())
 
 # Display chat messages
 for msg in st.session_state.llm.get_history():

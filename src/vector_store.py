@@ -74,7 +74,7 @@ def create_vector_store():
 class VectorStore:
 
     def __init__(self, vector_store_path=VECTOR_STORE_PATH, llm_model="granite3.3",
-                  chunk_size=500, chunk_overlap=100, persist=True, index_path="faiss_index"):
+                  chunk_size=500, chunk_overlap=50, persist=True, index_path="faiss_index"):
         self.vector_store_path = vector_store_path
         self.llm_model = llm_model
         self.embeddings_model = OllamaEmbeddings(model=llm_model)
@@ -120,33 +120,34 @@ class VectorStore:
     
     def add_documents(self, documents: List[Document]) -> List:
         splitted_docs = self.chunk_documents(documents=documents)
-        doc_embeddings = self.embed_documents(splitted_docs)
-        #print(doc_embeddings)
-        print(len(doc_embeddings))
-        print(type(doc_embeddings))
+        #doc_embeddings = self.embed_documents(splitted_docs)
+        #print(len(doc_embeddings))
+        #print(type(doc_embeddings))
+        #self.vector_store.add_embeddings(doc_embeddings)
         self.vector_store.add_documents(splitted_docs)
         self.vector_store.save_local(self.index_path)
         return documents
 
     def chunk_documents(self, documents: List[Document]) -> List[Document]:
-        return RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, 
-                                              chunk_overlap=self.chunk_overlap).split_documents(documents)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, 
+                                              chunk_overlap=self.chunk_overlap)    
+        return text_splitter.split_documents(documents)
     
     def add_all_documents(self, data_path: str = "data"):
         documents = self.load_documents(data_path)
         return self.add_documents(documents)
     
-    def load_document(self, pdf_path: Path):
+    def load_document(self, pdf_path: Path) -> List[Document]:
         loader = PyPDFLoader(str(pdf_path))
-        docs = loader.load() # TODO: shortcut for time reasons
+        docs = loader.load()[0:2] # TODO: shortcut for time reasons
         return docs if isinstance(docs, list) else [docs]
     
     def add_document(self, filePath: Path):
         docs = self.load_document(filePath)
         return self.add_documents(docs)
     
-    def similarity_search(self, question: str):
-        return self.vector_store.similarity_search(question)
+    def similarity_search(self, question: str, k:int) -> List[Document]:
+        return self.vector_store.similarity_search(question, k=k)
     
     def as_retriever(self):
         return self.vector_store.as_retriever()
