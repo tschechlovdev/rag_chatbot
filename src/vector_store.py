@@ -108,6 +108,15 @@ class VectorStore:
                 self.vector_store.save_local(self.index_path)
 
     def load_documents(self, data_path) -> List[Document]:
+        """
+        Loads documents from the specified directory.
+
+        Parameters:
+            data_path (str): The path to the directory containing PDF files.
+
+        Returns:
+            List[str]: A list of document texts, each representing a document loaded from a PDF file.
+        """
         documents = []
         for pdf_path in Path(data_path).glob("*.pdf"):
             docs = self.load_document(pdf_path)

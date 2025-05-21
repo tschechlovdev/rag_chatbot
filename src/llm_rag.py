@@ -10,6 +10,11 @@ from langchain.schema import Document
 from vector_store import VectorStore
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains.retrieval import create_retrieval_chain
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain.memory import ChatMessageHistory
 
 
 class LLMRAGHandler:
@@ -25,7 +30,8 @@ class LLMRAGHandler:
         " Use three sentences maximum and keep the answer concise."
         
         # keep track of the conversation history
-        self.history = [SystemMessage(content=self.system_prompt)]
+        self.history = ChatMessageHistory()
+        self.history.add_message(SystemMessage(content=self.system_prompt))
 
         # prompt template for q&a with rag
         self.rag_prompt = PromptTemplate.from_template(
@@ -33,27 +39,77 @@ class LLMRAGHandler:
         " Question: {question}" \
         " Context: {context}" \
         " Answer:")
+       
+        contextualize_q_system_prompt = (
+    "Given a chat history and the latest user question "
+    "which might reference context in the chat history, "
+    "formulate a standalone question which can be understood "
+    "without the chat history. Do NOT answer the question, "
+    "just reformulate it if needed and otherwise return it as is."
+)  
+        
+        # New Version:
+        qa_prompt = ChatPromptTemplate.from_messages([
+                ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("ai", "{context}"),
 
+                ("human", "{input}")])
+        
+        self.history_aware_retriever = create_history_aware_retriever(self.llm, 
+                                                                      self.vector_store.as_retriever(),
+                                                                        qa_prompt)
+        
+        self.qa_chain = create_stuff_documents_chain(self.llm, qa_prompt)
+        # Only create rag_chain if dependencies are defined
+        #if self.history_aware_retriever and self.qa_chain:
+        self.rag_chain = create_retrieval_chain(self.history_aware_retriever, self.qa_chain)
+        self.store={}
+        #else:
+         #   self.rag_chain = None
+
+
+    def get_chat_history(self, session_id):
+        if session_id not in self.store:
+            self.store[session_id] = ChatMessageHistory()
+        return self.store[session_id]
+    
     def generate_response(self, human_message) -> AIMessage:
         """Generates and appends a response from the LLM."""
         print(f"Adding Humang Message...")
         print(f"{human_message}")
 
         print("Generating response from LLM...")
+        conversational_rag_chain = RunnableWithMessageHistory(
+            self.rag_chain,
+            self.get_chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+        )
 
-        context_docs = self.retrieve(human_message)
-        response = self.generate(question=human_message, context=context_docs)
-        if isinstance(human_message, str):
-            human_message = HumanMessage(content=human_message)
+        # Run the retrieval chain
+        result = conversational_rag_chain.invoke({
+            "input": human_message},
+            config={"configurable": {"session_id": "default"}}
+        )
+        response = result["answer"]
+
+        #context_docs = self.retrieve(human_message)
+        #response = self.generate(question=human_message, context=context_docs)
+
+        #if isinstance(human_message, str):
+        #    human_message = HumanMessage(content=human_message)
         self.history.append(human_message)                
         self.history.append(response)
         return response
 
     def reset(self) -> None:
-        self.history = []
+        self.history = ChatMessageHistory()
+        self.history.add_message(SystemMessage(content=self.system_prompt))
 
-    def get_history(self) -> List[BaseMessage]:
-        return self.history
+    def get_history(self) -> List[str]:
+        return [msg.content for msg in self.history.messages if isinstance(msg, (HumanMessage, AIMessage))]
     
     def retrieve(self, question: str, k:int = 4):
         retrieved_docs = self.vector_store.similarity_search(question, k=k)
