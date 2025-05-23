@@ -40,34 +40,10 @@ class LLMRAGHandler:
         " Question: {input}" \
         " Context: {context}" \
         " Answer:")
-        
-        # New Version:
-        #qa_prompt = ChatPromptTemplate.from_messages([
-        #        ("system", self.system_prompt),
-        #    MessagesPlaceholder("chat_history"),
-        #    ("ai", "{context}"),#
 
-        # ("human", "{input}")])
-        
-        #self.history_aware_retriever = create_history_aware_retriever(self.llm, 
-        #                                                              self.vector_store.as_retriever(),
-        #                                                                qa_prompt)
-        
-        #self.qa_chain = create_stuff_documents_chain(self.llm, qa_prompt)
-        # Only create rag_chain if dependencies are defined
-        #if self.history_aware_retriever and self.qa_chain:
         self.llm_chain = self.rag_prompt | self.llm | StrOutputParser()
         self.rag_chain = create_retrieval_chain(self.vector_store.as_retriever(), self.llm_chain)
 
-        #self.store={}
-        #else:
-         #   self.rag_chain = None
-
-
-    def get_chat_history(self, session_id):
-        if session_id not in self.store:
-            self.store[session_id] = ChatMessageHistory()
-        return self.store[session_id]
     
     def generate_response(self, human_message) -> AIMessage:
         """Generates and appends a response from the LLM."""
@@ -84,11 +60,6 @@ class LLMRAGHandler:
         )
         print(response)
 
-        #context_docs = self.retrieve(human_message)
-        #response = self.generate(question=human_message, context=context_docs)
-
-        #if isinstance(human_message, str):
-        #    human_message = HumanMessage(content=human_message)
         self.history.append(HumanMessage(content=human_message))                
         self.history.append(AIMessage(content=response["answer"]))
         return response["answer"]
@@ -97,23 +68,13 @@ class LLMRAGHandler:
         self.history = []
         self.history.append(SystemMessage(content=self.system_prompt))
 
-    def get_history(self) -> List[str]:
+    def get_history(self) -> List[BaseMessage]:
         return self.history
     
-    def retrieve(self, question: str, k:int = 4):
+    def retrieve(self, question: str, k:int = 4) -> List[Document]:
         retrieved_docs = self.vector_store.similarity_search(question, k=k)
         return retrieved_docs
 
-    def generate(self, question: str, context: List[Document]):
-        docs_content = "\n\n".join(doc.page_content for doc in context)
-        messages = self.rag_prompt.invoke({"question": question, 
-                                           "context": docs_content, 
-                                           "chat_history": self.history}).to_messages()
-        response = self.llm.invoke(messages)
-        print(f"Type of response: {type(response)}")
-        print(f"Response: {response}")
-        print(f"Content of Response: {response.content}")
-        return response
     
     def add_pdf_to_context(self, filePath: Path):
         self.vector_store.add_document(filePath)
