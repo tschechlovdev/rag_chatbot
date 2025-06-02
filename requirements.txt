@@ -5,3 +5,6 @@ langchain-ollama==0.3.2
 ollama==0.4.8
 pypdf==5.4.0
 streamlit==1.44.1
+faiss-cpu==1.11.0
+beautifulsoup4==4.13.3
+
