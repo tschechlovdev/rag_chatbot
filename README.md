@@ -31,12 +31,12 @@ Make sure you have [Ollama](https://ollama.com) installed and a compatible model
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
-# Download model
+#### Download model
 ```bash
 ollama pull granite:3.3
 ```
 
-# Start the model
+#### Start the model
 ```bash 
 ollama run granite:3.3
 ```
