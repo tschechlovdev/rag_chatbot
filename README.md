@@ -59,12 +59,16 @@ pip install -r requirements.txt
 ### 4. Run the Streamlit App
 ```streamlit run app.py```
 
+-- 
+
 ## 📂 File Upload
 Once the app is running: Go to the sidebar to upload one or more PDF files.
 
 Ask natural questions about the content in the chat interface.
 
 The chatbot will search for relevant sections and answer using context.
+
+--
 
 ## 🏛️ Architecture Overview
 ![1_gXq3HJeXbPO2aGgFDYh0TA](https://github.com/user-attachments/assets/b492d7a7-d280-40ff-b92b-534cd1c415e7)
@@ -74,12 +78,16 @@ The chatbot will search for relevant sections and answer using context.
 - **Vector Store**: Responsible for storing the documents as vector embeddings in FAISS, a high-speed similarity search library and retrieving the relevant context
 -  **LLM**: The chatbot runs the Granite 3.3 model locally using Ollama. This means: Easy setup and prototyping, easy model switching, and full control over your data (everything stays local
 - **Conversation Store**: To make the chatbot stateful, we store the conversation history in a local file (e.g. JSON). This allows the chat to resume where you left off - even after refreshing the browser.
+
+--
   
 ## ⚠️ Limitations
 - Initial PDF parsing and embedding may take a few seconds for large files.
 - Latency depends on the chosen LLM model.
 - Evaluation of answers is qualitative — no scoring function included.
 - Runs only locally for easier development
+
+-- 
 
 ## 💡 Ideas for Future Improvements
 - Use agentic RAG (history-aware retrievers, dynamic tool-calling)
@@ -88,6 +96,7 @@ The chatbot will search for relevant sections and answer using context.
 - Cloud deployment
 - UI enhancements and document summarization
 
+--
 
 ## 📄 License
 MIT License. See LICENSE for details.
