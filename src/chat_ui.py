@@ -36,6 +36,9 @@ st.title("🤖 Chat with your PDFs 📄")
 UPLOAD_DIR = Path("uploaded_pdfs")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+#########################
+######### Initialization
+
 # Initialize session state
 if "llm" not in st.session_state:
     st.session_state.llm = LLMRAGHandler()
@@ -53,14 +56,13 @@ if st.session_state.processed_files:
         st.sidebar.markdown(f"- {pdf_path}")
 else:
     st.sidebar.info("No PDFs uploaded yet.")
+#########################
 
 
 
 
 #########################
 ###### PDF Upload
-
-
 st.sidebar.header("📄 Upload PDFs")
 
 # Hochladen der PDF-Dateien
@@ -82,6 +84,7 @@ if st.sidebar.button("📥 Add websites"):
         print(urls)
         st.session_state.llm.vector_store.index_websites(urls)
     st.sidebar.success("Websites indexed successfully.")
+#########################
 
 
 #####################
@@ -105,7 +108,10 @@ for msg in st.session_state.llm.get_history():
     role = "user" if isinstance(msg, HumanMessage) else "assistant"
     with st.chat_message(role):
         st.markdown(msg.content)
+#########################
 
+
+#########################
 # Sidebar actions
 if st.sidebar.button("🗑️ Reset Conversation"):
     st.session_state.llm.reset()
