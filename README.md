@@ -24,7 +24,7 @@ It uses the following tools for this:
 
 ### 1. Install Ollama and Run a Local LLM
 
-Make sure you have [Ollama](https://ollama.com) installed and a compatible model (e.g. `granite:3.3`) downloaded.
+Make sure you have [Ollama](https://ollama.com) installed and a compatible model (e.g. `granite3.3`) downloaded.
 
 ```bash
 # Install Ollama
