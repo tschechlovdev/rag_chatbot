@@ -33,12 +33,12 @@ curl -fsSL https://ollama.com/install.sh | sh
 
 #### Download model
 ```bash
-ollama pull granite:3.3
+ollama pull granite3.3
 ```
 
 #### Start the model
 ```bash 
-ollama run granite:3.3
+ollama run granite3.3
 ```
 
 ### 2. Clone This Repository
